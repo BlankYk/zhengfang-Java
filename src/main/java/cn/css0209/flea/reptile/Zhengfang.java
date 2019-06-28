@@ -205,8 +205,8 @@ public class Zhengfang {
         Document html = Jsoup.parse(response.body());
         Element table = html.select("table.datelist").first();
         Elements trs = table.getElementsByTag("tr");
-        String[] tableTitle = new String[15];
         Elements tableTitleTd = trs.get(0).getElementsByTag("td");
+        String[] tableTitle = new String[tableTitleTd.size()];
         for(int i=0;i<tableTitle.length;i++){
             tableTitle[i] = tableTitleTd.get(i).text();
         }

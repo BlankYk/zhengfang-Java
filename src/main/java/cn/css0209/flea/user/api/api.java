@@ -2,7 +2,6 @@ package cn.css0209.flea.user.api;
 
 import cn.css0209.flea.reptile.Zhengfang;
 import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.util.URLUtil;
 import cn.hutool.json.JSONObject;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -54,7 +53,7 @@ public class api {
             result.setMsg("登录失败,教务系统又双叒叕崩了！！");
         } catch (NullPointerException e) {
             result.setResult("fail");
-            result.setMsg("系统异常！请重试！");
+            result.setMsg("输入错误，确认账号密码验证码正确");
         }
         return result;
     }
@@ -100,6 +99,18 @@ public class api {
         return result;
     }
 
+    /**
+     * 查询成绩
+     * @param servletRequest 请求
+     * @param jsonObject
+     * {
+     *     "year": "2018-2019",
+     * 	    "semster": "2",
+     * 	    "course_natrue": "",
+     * 	    "btn": "btn_zg"
+     * }
+     * @return 查询成绩
+     */
     @GetMapping("select_grade")
     public Result selectGrade(HttpServletRequest servletRequest, @RequestBody JSONObject jsonObject) {
         HttpSession session = servletRequest.getSession();
