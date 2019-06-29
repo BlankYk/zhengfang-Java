@@ -4,32 +4,29 @@ import cn.css0209.flea.user.api.Result;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.URLUtil;
+import cn.hutool.extra.tokenizer.TokenizerEngine;
+import cn.hutool.extra.tokenizer.TokenizerUtil;
 import cn.hutool.http.Header;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
-import cn.hutool.json.JSON;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
+import com.hankcs.hanlp.HanLP;
+import com.hankcs.hanlp.dictionary.py.Pinyin;
 import lombok.Getter;
 import lombok.ToString;
-import org.apache.catalina.Session;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.GetMapping;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * @author blankyk
@@ -54,9 +51,9 @@ public class Zhengfang {
     /**
      * 爬取验证码
      */
-    public void captCha() {
+    public void captCha(String path) {
         String url = host + "/CheckCode.aspx";
-        HttpUtil.downloadFile(url, FileUtil.file("cn/css0209/flea/user/img/captCha.jpg"));
+        HttpUtil.downloadFile(url, FileUtil.file("cn/css0209/flea/user/img/captCha"+path+".jpg"));
     }
 
     private String VIEWSTATE() {
@@ -208,7 +205,14 @@ public class Zhengfang {
         Elements tableTitleTd = trs.get(0).getElementsByTag("td");
         String[] tableTitle = new String[tableTitleTd.size()];
         for(int i=0;i<tableTitle.length;i++){
-            tableTitle[i] = tableTitleTd.get(i).text();
+            String titleStr = tableTitleTd.get(i).text();
+            List<Pinyin> pibyinList = HanLP.convertToPinyinList(titleStr);
+            StringBuilder titlePy = new StringBuilder();
+            for (Pinyin pinyin : pibyinList) {
+                String py = pinyin.getPinyinWithoutTone();
+                titlePy.append(py);
+            }
+            tableTitle[i] = titlePy.toString();
         }
         trs.remove(0);
         JSONArray jsonArray = getTableValue(trs, tableTitle);

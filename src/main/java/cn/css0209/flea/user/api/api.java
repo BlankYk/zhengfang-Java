@@ -30,9 +30,9 @@ public class api {
      */
     @RequestMapping(value = "/captcha", produces = MediaType.IMAGE_JPEG_VALUE)
     @ResponseBody
-    public byte[] captCha() throws IOException {
-        zf.captCha();
-        File file = FileUtil.file("cn/css0209/flea/user/img/captCha.jpg");
+    public byte[] captCha(String path) throws IOException {
+        zf.captCha(path);
+        File file = FileUtil.file("cn/css0209/flea/user/img/captCha"+path+".jpg");
         FileInputStream inputStream = new FileInputStream(file);
         byte[] bytes = new byte[inputStream.available()];
         inputStream.read(bytes, 0, inputStream.available());
@@ -118,7 +118,21 @@ public class api {
         String xh = session.getAttribute("xh").toString();
 
         Result result = zf.grade(name, xh,jsonObject);
+        return result;
+    }
 
+    @GetMapping("loginout")
+    public Result loginout(HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        Result result = new Result();
+        try {
+            session.invalidate();
+            result.setResult("success");
+            result.setMsg("登出");
+        } catch (NullPointerException e) {
+            result.setResult("fail");
+            result.setMsg("error:"+e);
+        }
         return result;
     }
 }
