@@ -153,34 +153,36 @@ public class Zhengfang {
         JSONObject result = new JSONObject();
         //获取查询成绩页面
         HttpResponse response = gradePage(xh, name);
-        //解析获取数据
-        Document html = Jsoup.parse(response.body());
-        Element table = html.select("table.datelist").first();
-        Elements trs = table.getElementsByTag("tr");
-        Element titleTr = table.getElementsByTag("tr").first();
-        Elements titlesTd = titleTr.getElementsByTag("td");
-        String[] titles = new String[6];
-        for(int i=0;i<titles.length;i++){
-            titles[i] = titlesTd.get(i).text();
-        }
-        trs.remove(0);
 
-        if(trs.size()==0){
-            result.put(titles[0], "暂无");
-        }
-
-        JSONArray grades = getTableValue(trs, titles);
+        JSONArray grades = getTableValue(response.body());
         result.put("failedGrade",grades);
         return result;
     }
 
-    private JSONArray getTableValue(Elements trs, String[] titles) {
+    private JSONArray getTableValue(String response) {
+        //解析获取数据
+        Document html = Jsoup.parse(response);
+        Element table = html.select("table.datelist").first();
+        Elements trs = table.getElementsByTag("tr");
+        Elements tableTitleTd = trs.get(0).getElementsByTag("td");
+        String[] tableTitle = new String[tableTitleTd.size()];
+        for(int i=0;i<tableTitle.length;i++){
+            String titleStr = tableTitleTd.get(i).text();
+            List<Pinyin> pibyinList = HanLP.convertToPinyinList(titleStr);
+            StringBuilder titlePy = new StringBuilder();
+            for (Pinyin pinyin : pibyinList) {
+                String py = pinyin.getPinyinWithoutTone();
+                titlePy.append(py);
+            }
+            tableTitle[i] = titlePy.toString();
+        }
+        trs.remove(0);
         JSONArray jsonArray = new JSONArray();
         for(int i=0;i<trs.size();i++) {
             JSONObject json = new JSONObject();
             Elements tds = trs.get(i).getElementsByTag("td");
             for (int x=0;x<tds.size();x++) {
-                json.put(titles[x],tds.get(x).text());
+                json.put(tableTitle[x],tds.get(x).text());
             }
             jsonArray.put(json);
         }
@@ -199,23 +201,7 @@ public class Zhengfang {
         HttpRequest request = postGrade(name, xh, jsonObject);
         HttpResponse response = request.execute();
         //解析结果
-        Document html = Jsoup.parse(response.body());
-        Element table = html.select("table.datelist").first();
-        Elements trs = table.getElementsByTag("tr");
-        Elements tableTitleTd = trs.get(0).getElementsByTag("td");
-        String[] tableTitle = new String[tableTitleTd.size()];
-        for(int i=0;i<tableTitle.length;i++){
-            String titleStr = tableTitleTd.get(i).text();
-            List<Pinyin> pibyinList = HanLP.convertToPinyinList(titleStr);
-            StringBuilder titlePy = new StringBuilder();
-            for (Pinyin pinyin : pibyinList) {
-                String py = pinyin.getPinyinWithoutTone();
-                titlePy.append(py);
-            }
-            tableTitle[i] = titlePy.toString();
-        }
-        trs.remove(0);
-        JSONArray jsonArray = getTableValue(trs, tableTitle);
+        JSONArray jsonArray = getTableValue(response.body());
         JSONObject json = new JSONObject();
         json.put("grade", jsonArray);
 
