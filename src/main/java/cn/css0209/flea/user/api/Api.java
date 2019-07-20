@@ -12,12 +12,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+/**
+ * @author blankyk
+ */
 @RestController
 @RequestMapping("/user")
-public class api {
-    Zhengfang zf;
+public class Api {
+    private Zhengfang zf;
 
-    public api() {
+    public Api() {
 //        初始化爬虫
         zf = new Zhengfang();
     }
@@ -58,7 +61,7 @@ public class api {
         return result;
     }
 
-    @GetMapping("myinfo")
+    @GetMapping("myInfo")
     public Result myInfo(HttpServletRequest servletRequest) {
         Result result = new Result();
         HttpSession session = servletRequest.getSession();
@@ -76,7 +79,7 @@ public class api {
         return result;
     }
 
-    @GetMapping("failed_grade")
+    @GetMapping("failedGrade")
     public Result failedGrade(HttpServletRequest servletRequest) {
         Result result = new Result();
         //从session中获取名字和学号
@@ -102,7 +105,10 @@ public class api {
     /**
      * 查询成绩
      * @param servletRequest 请求
-     * @param jsonObject
+     * @param year 年份
+     * @param semester 学期
+     * @param courseNature 课程性质
+     * @param btn 查询按钮
      * {
      *     "year": "2018-2019",
      * 	    "semster": "2",
@@ -111,18 +117,22 @@ public class api {
      * }
      * @return 查询成绩
      */
-    @GetMapping("select_grade")
-    public Result selectGrade(HttpServletRequest servletRequest, @RequestBody JSONObject jsonObject) {
+    @GetMapping("selectGrade")
+    public Result selectGrade(HttpServletRequest servletRequest, String year,String semester,String courseNature,String btn) {
         HttpSession session = servletRequest.getSession();
         String name = session.getAttribute("name").toString();
         String xh = session.getAttribute("xh").toString();
-
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("year", year);
+        jsonObject.put("semester", semester);
+        jsonObject.put("course_nature", courseNature);
+        jsonObject.put("btn", btn);
         Result result = zf.grade(name, xh,jsonObject);
         return result;
     }
 
-    @GetMapping("loginout")
-    public Result loginout(HttpServletRequest request) {
+    @DeleteMapping("loginOut")
+    public Result loginOut(HttpServletRequest request) {
         HttpSession session = request.getSession();
         Result result = new Result();
         try {
