@@ -1,4 +1,4 @@
-# 四川航天职业技术学院教务系统爬虫
+# 四川航天职业技术学院教务系统爬虫接口
 ![GitHub](https://img.shields.io/github/license/BlankYk/zhengfang-Java.svg)
 ![GitHub](https://img.shields.io/badge/JDK-1.8%2B-blue.svg)
 ===
