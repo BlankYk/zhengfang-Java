@@ -3,6 +3,8 @@ package cn.css0209.flea.user.api;
 import cn.css0209.flea.reptile.Zhengfang;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,11 +21,7 @@ import java.io.IOException;
 @RequestMapping("/user")
 public class Api {
     private Zhengfang zf;
-
-    public Api() {
-//        初始化爬虫
-        zf = new Zhengfang();
-    }
+    private Logger log = LoggerFactory.getLogger(this.getClass());
 
     /**
      * 获取验证码
@@ -34,6 +32,7 @@ public class Api {
     @RequestMapping(value = "/captcha", produces = MediaType.IMAGE_JPEG_VALUE)
     @ResponseBody
     public byte[] captCha(String path) throws IOException {
+        zf = new Zhengfang();
         zf.captCha(path);
         File file = FileUtil.file("cn/css0209/flea/user/img/captCha"+path+".jpg");
         FileInputStream inputStream = new FileInputStream(file);
@@ -127,6 +126,7 @@ public class Api {
         jsonObject.put("semester", semester);
         jsonObject.put("course_nature", courseNature);
         jsonObject.put("btn", btn);
+//        log.info(jsonObject.toString());
         Result result = zf.grade(name, xh,jsonObject);
         return result;
     }
