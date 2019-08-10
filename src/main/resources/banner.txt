@@ -10,7 +10,7 @@ Thanks for Use
 Coded By
 Sichuan Aerospace Vocational and Technical College
 Department of Computer Science
-G17计应3班杨锴
+G17计应3 BlankYk
 Blog:https://css0209.cn
 Github:https://github.com/blankyk
 

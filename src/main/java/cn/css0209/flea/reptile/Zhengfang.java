@@ -22,6 +22,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,7 +46,7 @@ public class Zhengfang {
         String token = response.body().substring(85, 109);
         host = "http://220.167.53.63:95/(" + token + ")";
         VIEWSTATE = VIEWSTATE();
-        log.info("爬虫初始化完成");
+        log.info("爬虫启动 token:"+token);
     }
 
     /**

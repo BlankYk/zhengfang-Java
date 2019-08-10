@@ -1,5 +1,7 @@
 server:
   port: 5000
+  tomcat:
+    max-threads: 100
 spring:
   devtools:
     restart:
@@ -8,3 +10,4 @@ spring:
     cache: false
   session:
     timeout: 3600
+
