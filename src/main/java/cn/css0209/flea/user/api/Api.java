@@ -29,6 +29,20 @@ import java.io.IOException;
 public class Api {
     private Zhengfang zf;
     /**
+     * 获取token
+     */
+    @GetMapping("/token")
+    public Mono<Result> getToken(){
+        Result result = new Result();
+        zf = new Zhengfang();
+        String token = zf.getToken();
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("token", token);
+        result.setItem(jsonObject);
+        log.info("==>token:{}", token);
+        return Mono.just(result);
+    }
+    /**
      * 获取验证码
      *
      * @return 图片
@@ -36,10 +50,9 @@ public class Api {
      */
     @RequestMapping(value = "/captcha", produces = MediaType.IMAGE_JPEG_VALUE)
     @ResponseBody
-    public Flux<byte[]> captCha(String path) throws IOException {
+    public Flux<byte[]> captCha(String path,String token) throws IOException {
         log.info("<==请求验证码,path:"+path);
-        zf = new Zhengfang();
-        zf.captCha(path);
+        zf.captCha(path,token);
         File file = FileUtil.file("cn/css0209/flea/user/img/captCha" + path + ".jpg");
         FileInputStream inputStream = new FileInputStream(file);
         byte[] bytes = new byte[inputStream.available()];
@@ -54,9 +67,10 @@ public class Api {
         String username = loginInfo.getStr("username");
         String password = loginInfo.getStr("password");
         String captcha = loginInfo.getStr("captcha");
+        String token = loginInfo.getStr("token");
         log.info("<=={}登录,验证码:{}",username,captcha);
         try {
-            result = zf.login(username, password, captcha);
+            result = zf.login(username, password, captcha,token);
             JSONObject loginJson = result.getItem();
             session.getAttributes().put("name", loginJson.get("name"));
             session.getAttributes().put("xh", username);
@@ -71,14 +85,14 @@ public class Api {
         return Mono.just(result);
     }
 
-    @GetMapping("myInfo")
-    public Mono<Result> myInfo(WebSession session) {
+    @GetMapping("/info")
+    public Mono<Result> myInfo(String token,WebSession session) {
         Result result = new Result();
         String name = session.getAttribute("name");
         String xh = session.getAttribute("xh");
-        log.info("<=={}({})获取信息",name,xh);
+        log.info("<=={}({})获取信息,token:{}",name,xh,token);
         try {
-            JSONObject infoJson = zf.myInfo(name, xh);
+            JSONObject infoJson = zf.myInfo(name, xh,token);
             result.setResult("success");
             result.setMsg("获取信息成功");
             result.setItem(infoJson);
@@ -90,15 +104,15 @@ public class Api {
         return Mono.just(result);
     }
 
-    @GetMapping("failedGrade")
-    public Mono<Result> failedGrade(WebSession session) {
+    @GetMapping("/failedGrade")
+    public Mono<Result> failedGrade(String token,WebSession session) {
         Result result = new Result();
         //从session中获取名字和学号
         String xh = session.getAttribute("xh");
         String name = session.getAttribute("name");
         log.info("<=={}({})获取未通过成绩",name,xh);
         try {
-            JSONObject failedGradeJson = zf.failedGrade(xh, name);
+            JSONObject failedGradeJson = zf.failedGrade(xh, name,token);
             result.setResult("success");
             result.setMsg("查询到未通过成绩");
             result.setItem(failedGradeJson);
@@ -130,8 +144,8 @@ public class Api {
      *                       }
      * @return 查询成绩
      */
-    @GetMapping("selectGrade")
-    public Mono<Result> selectGrade(WebSession session, String year, String semester, String courseNature, String btn) {
+    @GetMapping("/selectGrade")
+    public Mono<Result> selectGrade(WebSession session, String year, String semester, String courseNature, String btn,String token) {
         String name = session.getAttribute("name");
         String xh = session.getAttribute("xh");
         log.info("<=={}({})查询成绩",name,xh);
@@ -140,12 +154,12 @@ public class Api {
         jsonObject.put("semester", semester);
         jsonObject.put("course_nature", courseNature);
         jsonObject.put("btn", btn);
-        Result result = zf.grade(name, xh, jsonObject);
+        Result result = zf.grade(name, xh, jsonObject,token);
         log.info("==>{}",result.toString());
         return Mono.just(result);
     }
 
-    @DeleteMapping("loginOut")
+    @DeleteMapping("/loginOut")
     public Mono<Result> loginOut(WebSession session) {
         Result result = new Result();
         String name = session.getAttribute("name");

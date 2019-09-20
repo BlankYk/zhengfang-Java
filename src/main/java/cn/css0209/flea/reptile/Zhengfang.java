@@ -36,28 +36,34 @@ import java.util.Map;
 @ToString
 public class Zhengfang {
     Logger log = LoggerFactory.getLogger(this.getClass());
-    private String host;
-    private String VIEWSTATE;
 
     public Zhengfang() {
+        log.info("爬虫启动");
+    }
+
+    /**
+     * 获取token
+     */
+    public String getToken(){
         HttpRequest request = HttpRequest.get("http://220.167.53.63:95").setFollowRedirects(false);
         HttpResponse response = request.execute();
+        Document html = Jsoup.parse(response.body());
         //获取token
-        String token = response.body().substring(85, 109);
-        host = "http://220.167.53.63:95/(" + token + ")";
-        VIEWSTATE = VIEWSTATE();
-        log.info("爬虫启动 token:"+token);
+        String token = html.getElementsByTag("a").attr("href").substring(2, 26);
+        return token;
     }
 
     /**
      * 爬取验证码
      */
-    public void captCha(String path) {
+    public void captCha(String path,String token) {
+        String host = "http://220.167.53.63:95/(" + token + ")";
         String url = host + "/CheckCode.aspx";
         HttpUtil.downloadFile(url, FileUtil.file("cn/css0209/flea/user/img/captCha"+path+".jpg"));
     }
 
-    private String VIEWSTATE() {
+    private String VIEWSTATE(String token) {
+        String host = "http://220.167.53.63:95/(" + token + ")";
         String url = host + "/default2.aspx";
         String html = HttpRequest.get(url).execute().body();
         return html.substring(1706, 1754);
@@ -69,11 +75,12 @@ public class Zhengfang {
      * @param password 密码
      * @param captcha 验证码
      */
-    public Result login(String username, String password, String captcha) {
+    public Result login(String username, String password, String captcha,String token) {
+        String host = "http://220.167.53.63:95/(" + token + ")";
         String url = host + "/default2.aspx";
         Result result = new Result();
         Map<String, Object> param = new HashMap<>();
-        param.put("__VIEWSTATE", VIEWSTATE);
+        param.put("__VIEWSTATE", VIEWSTATE(token));
         param.put("TextBox1", username);
         param.put("TextBox2", password);
         param.put("TextBox3", captcha);
@@ -108,7 +115,8 @@ public class Zhengfang {
      * @param name 姓名
      * @return response对象
      */
-    private HttpResponse gradePage(String xh,String name){
+    private HttpResponse gradePage(String xh,String name,String token){
+        String host = "http://220.167.53.63:95/(" + token + ")";
         String url = host + "/xscjcx.aspx?xh=" + xh + "&xm=" + URLUtil.encode(name)+"&gnmkdm=N121605";
         HttpRequest request = HttpRequest.get(url)
                 .header(Header.REFERER, host + "xs_main.aspx?xh=" + xh)
@@ -123,10 +131,10 @@ public class Zhengfang {
      * @param xh 学号
      * @return 学生基本信息
      */
-    public JSONObject myInfo(String name,String xh){
+    public JSONObject myInfo(String name,String xh,String token){
         JSONObject result = new JSONObject();
         //获取页面内容
-        HttpResponse response = gradePage(xh, name);
+        HttpResponse response = gradePage(xh, name,token);
         //获取个人信息存入集合
         List<String> xys = ReUtil.findAll("学院：[\\u4e00-\\u9fa5]+", response.body(), 0, new ArrayList<>());
         List<String> zys = ReUtil.findAll("\"lbl_zymc\">[\\u4e00-\\u9fa5]+", response.body(), 0, new ArrayList<>());
@@ -150,16 +158,21 @@ public class Zhengfang {
      * @param name 姓名
      * @return 未通过成绩
      */
-    public JSONObject failedGrade(String xh,String name){
+    public JSONObject failedGrade(String xh,String name,String token){
         JSONObject result = new JSONObject();
         //获取查询成绩页面
-        HttpResponse response = gradePage(xh, name);
+        HttpResponse response = gradePage(xh, name,token);
 
         JSONArray grades = getTableValue(response.body());
         result.put("failedGrade",grades);
         return result;
     }
 
+    /**
+     * 数据映射
+     * @param response
+     * @return
+     */
     private JSONArray getTableValue(String response) {
         //解析获取数据
         Document html = Jsoup.parse(response);
@@ -196,10 +209,10 @@ public class Zhengfang {
      * @param xh 学号
      * @return Result对象
      */
-    public Result grade(String name, String xh,JSONObject jsonObject) {
+    public Result grade(String name, String xh,JSONObject jsonObject,String token) {
         Result result = new Result();
         //获得查询结果
-        HttpRequest request = postGrade(name, xh, jsonObject);
+        HttpRequest request = postGrade(name, xh, jsonObject,token);
         HttpResponse response = request.execute();
         //解析结果
         JSONArray jsonArray = getTableValue(response.body());
@@ -219,8 +232,9 @@ public class Zhengfang {
      * @param jsonObject 客户端传来数据
      * @return HttpRequest
      */
-    private HttpRequest postGrade(String name, String xh,JSONObject jsonObject){
-        HttpResponse response = gradePage(xh, name);
+    private HttpRequest postGrade(String name, String xh,JSONObject jsonObject,String token){
+        String host = "http://220.167.53.63:95/(" + token + ")";
+        HttpResponse response = gradePage(xh, name,token);
         Document html = Jsoup.parse(response.body());
         //表单数据
         String EVENTTARGET = html.selectFirst("input[name=__EVENTTARGET]").attr("value");
@@ -245,7 +259,7 @@ public class Zhengfang {
                 .form(parmes);
     }
     /**
-     * 获取查询成绩按钮值
+     * 获取查询成绩按钮值URL化
      * @param btn 按钮
      * @return 值
      */
