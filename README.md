@@ -9,9 +9,10 @@
     - [成绩查询平台](https://edu.css0209.cn)
     - [查询平台Github](https://github.com/BlankYk/zhengfang-web-react)  
 ---
+
 # 2019.11.01   
-更新了成绩统计页面的爬虫,接口直接调用成绩查询接口,`btn`为`Button1`  
----
+
+由于部分同学急需查成绩统计,更新了成绩统计页面的爬虫,接口直接调用成绩查询接口,`btn`为`Button1`  
 使用技术:  
     `Spring-Boot-webflux`_2.1.6.RELEASE  
     `hutool-all`_4.5.13  
