@@ -10,6 +10,7 @@ import cn.hutool.http.Header;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
+import cn.hutool.json.JSON;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import com.hankcs.hanlp.HanLP;
@@ -177,6 +178,15 @@ public class Zhengfang {
         //解析获取数据
         Document html = Jsoup.parse(response);
         Element table = html.select("table.datelist").first();
+        return getItems(table);
+    }
+
+    /**
+     * 表格内容获取
+     * @param table 表格
+     * @return 获取内容
+     */
+    private JSONArray getItems(Element table) {
         Elements trs = table.getElementsByTag("tr");
         Elements tableTitleTd = trs.get(0).getElementsByTag("td");
         String[] tableTitle = new String[tableTitleTd.size()];
@@ -192,11 +202,11 @@ public class Zhengfang {
         }
         trs.remove(0);
         JSONArray jsonArray = new JSONArray();
-        for(int i=0;i<trs.size();i++) {
+        for (Element tr : trs) {
             JSONObject json = new JSONObject();
-            Elements tds = trs.get(i).getElementsByTag("td");
-            for (int x=0;x<tds.size();x++) {
-                json.put(tableTitle[x],tds.get(x).text());
+            Elements tds = tr.getElementsByTag("td");
+            for (int x = 0; x < tds.size(); x++) {
+                json.put(tableTitle[x], tds.get(x).text());
             }
             jsonArray.put(json);
         }
@@ -211,18 +221,52 @@ public class Zhengfang {
      */
     public Result grade(String name, String xh,JSONObject jsonObject,String token) {
         Result result = new Result();
+        //返回结果
+        JSONObject json = new JSONObject();
         //获得查询结果
         HttpRequest request = postGrade(name, xh, jsonObject,token);
         HttpResponse response = request.execute();
         //解析结果
-        JSONArray jsonArray = getTableValue(response.body());
-        JSONObject json = new JSONObject();
-        json.put("grade", jsonArray);
+        if(jsonObject.getStr("btn").equals("Button1")){
+            JSONObject grade = gradeStatistics(response.body());
+            json.put("gradeStatistics",grade);
+        }else {
+            JSONArray jsonArray = getTableValue(response.body());
+            json.put("grade", jsonArray);
+        }
 
         result.setResult("success");
         result.setMsg("请求成功");
         result.setItem(json);
         return result;
+    }
+
+    /**
+     * 成绩统计查询
+     * @param response 成绩统计html页面
+     * @return json
+     */
+    private JSONObject gradeStatistics(String response) {
+        JSONObject jsonObject = new JSONObject();
+        Document html = Jsoup.parse(response);
+        Element table1 = html.selectFirst("#Datagrid2");
+        JSONArray data2 = getItems(table1);
+        Element table2 = html.selectFirst("#DataGrid6");
+        JSONArray data6 = getItems(table2);
+        Element table3 = html.selectFirst("#DataGrid7");
+        JSONArray data7 = getItems(table3);
+        String totalPeople = html.selectFirst("#zyzrs").text();
+        String averageScorePoint = html.selectFirst("#pjxfjd").text();
+        String sumOfGradePoints = html.selectFirst("#xfjdzh").text();
+        String creditStatistics = html.selectFirst("#xftj").text();
+        jsonObject.put("data2",data2);
+        jsonObject.put("data6",data6);
+        jsonObject.put("data7",data7);
+        jsonObject.put("totalPeople",totalPeople);
+        jsonObject.put("averageScorePoint",averageScorePoint);
+        jsonObject.put("sumOfGradePoints",sumOfGradePoints);
+        jsonObject.put("creditStatistics",creditStatistics);
+        return jsonObject;
     }
 
     /**
