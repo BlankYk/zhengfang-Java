@@ -10,7 +10,7 @@
     </parent>
     <groupId>cn.css0209.flea</groupId>
     <artifactId>flea</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
     <name>flea</name>
     <description>四川航天职业技术学院成绩查询平台</description>
 
@@ -63,6 +63,10 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <fork>true</fork>
+                    <addResources>true</addResources>
+                </configuration>
             </plugin>
 
             <plugin>
@@ -70,15 +74,6 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <skipTests>true</skipTests>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <fork>true</fork>
-                    <addResources>true</addResources>
                 </configuration>
             </plugin>
         </plugins>
