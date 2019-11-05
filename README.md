@@ -2,15 +2,15 @@
 ![GitHub](https://img.shields.io/github/license/BlankYk/zhengfang-Java.svg)
 ![GitHub](https://img.shields.io/badge/JDK-1.8%2B-blue.svg)  
 ---  
-[接口文档](https://documenter.getpostman.com/view/5735040/S1a61mCQ?version=latest)  
-等我闲的发慌再完善文档(咕咕咕)
-- 衍生前端:   
+[接口文档](https://apidoc.edu.css0209.cn/)  
+
+- 衍生前端:  
     成绩查询平台
     - [成绩查询平台](https://edu.css0209.cn)
     - [查询平台Github](https://github.com/BlankYk/zhengfang-web-react)  
 ---
 
-# 2019.11.01   
+# 2019.11.01  
 
 由于部分同学急需查成绩统计,更新了成绩统计页面的爬虫,接口直接调用成绩查询接口,`btn`为`Button1`  
 使用技术:  
