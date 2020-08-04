@@ -8,9 +8,8 @@ VOLUME /app
 ADD ./ /app
 WORKDIR /app
 RUN mvn package
-ADD ./target /app/target
+ADD ./target /app
 RUN ls /app
-RUN ls /app/target
-CMD java -jar /app/target/flea-0.0.2.jar
+CMD java -jar /app/flea-0.0.2.jar
 
 EXPOSE 5000
