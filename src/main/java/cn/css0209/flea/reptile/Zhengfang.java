@@ -4,26 +4,22 @@ import cn.css0209.flea.user.api.Result;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.URLUtil;
-import cn.hutool.extra.tokenizer.TokenizerEngine;
-import cn.hutool.extra.tokenizer.TokenizerUtil;
 import cn.hutool.http.Header;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
-import cn.hutool.json.JSON;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import com.hankcs.hanlp.HanLP;
 import com.hankcs.hanlp.dictionary.py.Pinyin;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,11 +29,9 @@ import java.util.Map;
 /**
  * @author blankyk
  */
-@Getter
-@ToString
+@Slf4j
+@Service
 public class Zhengfang {
-    Logger log = LoggerFactory.getLogger(this.getClass());
-
     public Zhengfang() {
         log.info("爬虫启动");
     }
@@ -93,6 +87,8 @@ public class Zhengfang {
         List<String> names = ReUtil.findAll("[\\u4E00-\\u9FA5]+同学",response.body(),0,new ArrayList<>());
         List<String> captchas = ReUtil.findAll("language=\'javascript\'",response.body(),0,new ArrayList<>());
         List<String> error = ReUtil.findAll("ERROR", response.body(), 0, new ArrayList<>());
+        List<String> outSchool = ReUtil.findAll("用户名不存在或未按照要求参加教学活动", response.body(), 0, new ArrayList<>());
+        log.info("outSchool:{}", outSchool);
         if(names.size()>0){
             String name = names.get(0).replaceAll("同学","");
             result.setResult("success");
@@ -100,12 +96,18 @@ public class Zhengfang {
             JSONObject json = new JSONObject();
             json.put("name",name);
             result.setItem(json);
+            return result;
         }else if(captchas.size()>0){
             result.setResult("fail");
-            result.setMsg("验证码错啦！用你的卡姿兰大眼睛康康！");
+            result.setMsg("验证码错啦！");
+            return result;
         }else if(error.size()>0){
             result.setResult("fail");
-            result.setMsg("由于不知道什么原因，登录错误，可能是密码错哦！！");
+            result.setMsg("登录失败！账号或密码错误！");
+            return result;
+        }else if(outSchool.size() > 0 ){
+            result.setResult("fail");
+            result.setMsg("你可能已经不是本校学生~");
         }
         return result;
     }

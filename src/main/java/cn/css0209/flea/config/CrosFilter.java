@@ -15,10 +15,10 @@ import reactor.core.publisher.Mono;
 
 @Configuration
 public class CrosFilter {
-    //这里为支持的请求头，如果有自定义的header字段请自己添加（不知道为什么不能使用*）
+    //这里为支持的请求头，如果有自定义的header字段请自己添加（不能使用*）
     private static final String ALLOWED_HEADERS = "Origin, X-Requested-With, Content-Type, Accept, Authorization";
     private static final String ALLOWED_METHODS = "GET, HEAD, POST, PUT, DELETE, OPTIONS, PATCH";
-    private static final String ALLOWED_ORIGIN = "https://edu.css0209.cn";
+    private static final String ALLOWED_ORIGIN = "http://localhost:3000";
     private static final String ALLOWED_Expose = "*";
     private static final String MAX_AGE = "0";
 
