@@ -8,6 +8,6 @@ ADD ./ /app
 WORKDIR /app
 RUN mvn package
 
-CMD java -jar ./target/flea-0.0.2.jar &
+CMD java -jar /app/target/flea-0.0.2.jar &
 
 EXPOSE 5000
