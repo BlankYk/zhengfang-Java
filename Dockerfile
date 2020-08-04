@@ -4,9 +4,9 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 RUN apk add --no-cache maven
 
 VOLUME /app
+RUN mvn package
 ADD ./ /app
 WORKDIR /app
-RUN mvn package
 
 RUN ls /app
 RUN ls /app/target
