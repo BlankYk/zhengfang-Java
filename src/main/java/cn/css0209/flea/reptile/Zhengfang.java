@@ -148,7 +148,7 @@ public class Zhengfang {
         String xzb = xzbs.get(0).replaceAll("行政班：", "");
         result.put("name",name);
         result.put("student_id", xh);
-        result.put("faculty",xy);
+        result.put("faculty", xy);
         result.put("profession", zy);
         result.put("asClass", xzb);
         return result;

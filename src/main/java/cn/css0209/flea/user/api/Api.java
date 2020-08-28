@@ -65,14 +65,13 @@ public class Api {
 
     @PostMapping("/login")
     public Mono<Result> login(@RequestBody JSONObject loginInfo, WebSession session) {
-        Result result = new Result();
         String username = loginInfo.getStr("username");
         String password = loginInfo.getStr("password");
         String captcha = loginInfo.getStr("captcha");
         String token = loginInfo.getStr("token");
         log.info("<=={}登录,验证码:{}", username, captcha);
-        result = zf.login(username, password, captcha, token);
-        if ("fail".equals(result.getMsg())) {
+        Result result = zf.login(username, password, captcha, token);
+        if (!"fail".equals(result.getResult())) {
             JSONObject loginJson = result.getItem();
             session.getAttributes().put("name", loginJson.get("name"));
             session.getAttributes().put("xh", username);
