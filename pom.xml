@@ -10,7 +10,7 @@
     </parent>
     <groupId>cn.css0209.flea</groupId>
     <artifactId>flea</artifactId>
-    <version>0.0.2</version>
+    <version>1.0.0</version>
     <name>flea</name>
     <description>四川航天职业技术学院成绩查询平台</description>
 
@@ -55,6 +55,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>29.0-jre</version>
         </dependency>
     </dependencies>
 

@@ -13,13 +13,18 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
+/**
+ * @author blankyk
+ */
 @Configuration
 public class CrosFilter {
-    //这里为支持的请求头，如果有自定义的header字段请自己添加（不能使用*）
+    /**
+     * 这里为支持的请求头，如果有自定义的header字段请自己添加（不能使用*）
+     */
     private static final String ALLOWED_HEADERS = "Origin, X-Requested-With, Content-Type, Accept, Authorization";
     private static final String ALLOWED_METHODS = "GET, HEAD, POST, PUT, DELETE, OPTIONS, PATCH";
     private static final String ALLOWED_ORIGIN = "http://localhost:3000";
-    private static final String ALLOWED_Expose = "*";
+    private static final String ALLOWED_EXPOSE = "*";
     private static final String MAX_AGE = "0";
 
     @Bean
@@ -33,7 +38,7 @@ public class CrosFilter {
                 headers.add("Access-Control-Allow-Methods", ALLOWED_METHODS);
                 headers.add("Access-Control-Max-Age", MAX_AGE);
                 headers.add("Access-Control-Allow-Headers", ALLOWED_HEADERS);
-                headers.add("Access-Control-Expose-Headers", ALLOWED_Expose);
+                headers.add("Access-Control-Expose-Headers", ALLOWED_EXPOSE);
                 headers.add("Access-Control-Allow-Credentials", "true");
                 if (request.getMethod() == HttpMethod.OPTIONS) {
                     response.setStatusCode(HttpStatus.OK);

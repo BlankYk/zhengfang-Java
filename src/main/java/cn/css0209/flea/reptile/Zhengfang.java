@@ -1,6 +1,10 @@
 package cn.css0209.flea.reptile;
 
-import cn.css0209.flea.user.api.Result;
+import cn.css0209.flea.user.model.QueryParams;
+import cn.css0209.flea.user.model.Result;
+import cn.css0209.flea.user.model.UserInfo;
+import cn.css0209.flea.user.types.BtnType;
+import cn.css0209.flea.user.types.ResultStatus;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.URLUtil;
@@ -17,10 +21,9 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,7 +42,7 @@ public class Zhengfang {
     /**
      * 获取token
      */
-    public String getToken(){
+    public String getToken() {
         HttpRequest request = HttpRequest.get("http://220.167.53.63:95").setFollowRedirects(false);
         HttpResponse response = request.execute();
         Document html = Jsoup.parse(response.body());
@@ -51,76 +54,91 @@ public class Zhengfang {
     /**
      * 爬取验证码
      */
-    public void captCha(String path,String token) {
+    public byte[] captCha(String path, String token) throws Exception {
         String host = "http://220.167.53.63:95/(" + token + ")";
         String url = host + "/CheckCode.aspx";
-        HttpUtil.downloadFile(url, FileUtil.file("cn/css0209/flea/user/img/captCha"+path+".jpg"));
+        HttpUtil.downloadFile(url, FileUtil.file("cn/css0209/flea/user/img/captCha" + path + ".jpg"));
+        FileInputStream inputStream = new FileInputStream(FileUtil.file("cn/css0209/flea/user/img/captCha" + path + ".jpg"));
+        byte[] bytes = new byte[inputStream.available()];
+        inputStream.read(bytes, 0, inputStream.available());
+        log.info("==>返回图片:captCha{}.jpg", path);
+        return bytes;
     }
 
     private String VIEWSTATE(String token) {
         String host = "http://220.167.53.63:95/(" + token + ")";
         String url = host + "/default2.aspx";
-        String html = HttpRequest.get(url).execute().body();
-        return html.substring(1706, 1754);
-    }
-
-    /**
-     * 登录
-     * @param username 用户名
-     * @param password 密码
-     * @param captcha 验证码
-     */
-    public Result login(String username, String password, String captcha,String token) {
-        String host = "http://220.167.53.63:95/(" + token + ")";
-        String url = host + "/default2.aspx";
-        Result result = new Result();
-        Map<String, Object> param = new HashMap<>();
-        param.put("__VIEWSTATE", VIEWSTATE(token));
-        param.put("TextBox1", username);
-        param.put("TextBox2", password);
-        param.put("TextBox3", captcha);
-        param.put("Button1","");
-        HttpRequest request = HttpRequest.post(url)
-                .form(param)
-                .setFollowRedirects(true);
-        HttpResponse response = request.execute();
-        List<String> names = ReUtil.findAll("[\\u4E00-\\u9FA5]+同学",response.body(),0,new ArrayList<>());
-        List<String> captchas = ReUtil.findAll("language=\'javascript\'",response.body(),0,new ArrayList<>());
-        List<String> error = ReUtil.findAll("ERROR", response.body(), 0, new ArrayList<>());
-        List<String> outSchool = ReUtil.findAll("用户名不存在或未按照要求参加教学活动", response.body(), 0, new ArrayList<>());
-        log.info("outSchool:{}", outSchool);
-        if(names.size()>0){
-            String name = names.get(0).replaceAll("同学","");
-            result.setResult("success");
-            result.setMsg("登录成功！");
-            JSONObject json = new JSONObject();
-            json.put("name",name);
-            result.setItem(json);
-            return result;
-        }else if(captchas.size()>0){
-            result.setResult("fail");
-            result.setMsg("验证码错啦！");
-            return result;
-        }else if(error.size()>0){
-            result.setResult("fail");
-            result.setMsg("登录失败！账号或密码错误！");
-            return result;
-        }else if(outSchool.size() > 0 ){
-            result.setResult("fail");
-            result.setMsg("你可能已经不是本校学生~");
+        String result = "";
+        Document html = Jsoup.parse(HttpRequest.get(url).execute().body());
+        Elements inputTags = html.getElementsByTag("input");
+        for (Element item : inputTags) {
+            if ("__VIEWSTATE".equals(item.attr("name"))) {
+                log.info("name:{},value:{}", item.attr("name"), item.attr("value"));
+                result = item.attr("value");
+            }
         }
         return result;
     }
 
     /**
+     * 登录
+     *
+     * @param username 用户名
+     * @param password 密码
+     * @param captcha  验证码
+     */
+    public Result login(String username, String password, String captcha, String token) {
+        String host = "http://220.167.53.63:95/(" + token + ")";
+        String url = host + "/default2.aspx";
+        Map<String, Object> param = new HashMap<>();
+        param.put("__VIEWSTATE", VIEWSTATE(token));
+        param.put("TextBox1", username);
+        param.put("TextBox2", password);
+        param.put("TextBox3", captcha);
+        param.put("Button1", "");
+        HttpRequest request = HttpRequest.post(url)
+                .form(param)
+                .setFollowRedirects(true);
+        HttpResponse response = request.execute();
+        List<String> names = ReUtil.findAll("[\\u4E00-\\u9FA5]+同学", response.body(), 0, new ArrayList<>());
+        List<String> captchas = ReUtil.findAll("language=\'javascript\'", response.body(), 0, new ArrayList<>());
+        List<String> error = ReUtil.findAll("ERROR", response.body(), 0, new ArrayList<>());
+        List<String> outSchool = ReUtil.findAll("用户名不存在或未按照要求参加教学活动", response.body(), 0, new ArrayList<>());
+        if (names.size() > 0) {
+            return Result.builder()
+                    .result(ResultStatus.success)
+                    .msg("登陆成功!")
+                    .item(names.get(0).replaceAll("同学", ""))
+                    .build();
+        } else if (captchas.size() > 0) {
+            return Result.builder()
+                    .result(ResultStatus.fail)
+                    .msg("验证码错误!")
+                    .build();
+        } else if (error.size() > 0) {
+            return Result.builder()
+                    .result(ResultStatus.fail)
+                    .msg("登录失败！账号或密码错误！")
+                    .build();
+        } else if (outSchool.size() > 0) {
+            return Result.builder()
+                    .result(ResultStatus.fail)
+                    .msg("你已经是大人了!")
+                    .build();
+        }
+        return Result.builder().build();
+    }
+
+    /**
      * 查询成绩页面
-     * @param xh 学号
+     *
+     * @param xh   学号
      * @param name 姓名
      * @return response对象
      */
-    private HttpResponse gradePage(String xh,String name,String token){
+    private HttpResponse gradePage(String xh, String name, String token) {
         String host = "http://220.167.53.63:95/(" + token + ")";
-        String url = host + "/xscjcx.aspx?xh=" + xh + "&xm=" + URLUtil.encode(name)+"&gnmkdm=N121605";
+        String url = host + "/xscjcx.aspx?xh=" + xh + "&xm=" + URLUtil.encode(name) + "&gnmkdm=N121605";
         HttpRequest request = HttpRequest.get(url)
                 .header(Header.REFERER, host + "xs_main.aspx?xh=" + xh)
                 .header(Header.USER_AGENT, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:67.0) Gecko/20100101 Firefox/67.0");
@@ -130,49 +148,51 @@ public class Zhengfang {
 
     /**
      * 获取个人信息
+     *
      * @param name 姓名
-     * @param xh 学号
+     * @param xh   学号
      * @return 学生基本信息
      */
-    public JSONObject myInfo(String name,String xh,String token){
-        JSONObject result = new JSONObject();
+    public UserInfo myInfo(String name, String xh, String token) {
         //获取页面内容
-        HttpResponse response = gradePage(xh, name,token);
+        HttpResponse response = gradePage(xh, name, token);
         //获取个人信息存入集合
         List<String> xys = ReUtil.findAll("学院：[\\u4e00-\\u9fa5]+", response.body(), 0, new ArrayList<>());
         List<String> zys = ReUtil.findAll("\"lbl_zymc\">[\\u4e00-\\u9fa5]+", response.body(), 0, new ArrayList<>());
         List<String> xzbs = ReUtil.findAll("行政班：[\\u4E00-\\u9FA5A-Za-z0-9_]+", response.body(), 0, new ArrayList<>());
         //获取信息
-        String xy = xys.get(0).replaceAll("学院：","");
+        String xy = xys.get(0).replaceAll("学院：", "");
         String zy = zys.get(0).replaceAll("\"lbl_zymc\">", "");
         String xzb = xzbs.get(0).replaceAll("行政班：", "");
-        result.put("name",name);
-        result.put("student_id", xh);
-        result.put("faculty", xy);
-        result.put("profession", zy);
-        result.put("asClass", xzb);
-        return result;
+        return UserInfo.builder().name(name)
+                .sid(xh)
+                .faculty(xy)
+                .profession(zy)
+                .asClass(xzb)
+                .build();
     }
 
 
     /**
      * 挂科的成绩
-     * @param xh 学号
+     *
+     * @param xh   学号
      * @param name 姓名
      * @return 未通过成绩
      */
-    public JSONObject failedGrade(String xh,String name,String token){
+    public JSONObject failedGrade(String xh, String name, String token) {
         JSONObject result = new JSONObject();
         //获取查询成绩页面
-        HttpResponse response = gradePage(xh, name,token);
+        HttpResponse response = gradePage(xh, name, token);
 
         JSONArray grades = getTableValue(response.body());
-        result.put("failedGrade",grades);
+        result.put("failedGrade", grades);
         return result;
     }
 
     /**
      * 数据映射
+     *
      * @param response
      * @return
      */
@@ -185,6 +205,7 @@ public class Zhengfang {
 
     /**
      * 表格内容获取
+     *
      * @param table 表格
      * @return 获取内容
      */
@@ -192,7 +213,7 @@ public class Zhengfang {
         Elements trs = table.getElementsByTag("tr");
         Elements tableTitleTd = trs.get(0).getElementsByTag("td");
         String[] tableTitle = new String[tableTitleTd.size()];
-        for(int i=0;i<tableTitle.length;i++){
+        for (int i = 0; i < tableTitle.length; i++) {
             String titleStr = tableTitleTd.get(i).text();
             List<Pinyin> pibyinList = HanLP.convertToPinyinList(titleStr);
             StringBuilder titlePy = new StringBuilder();
@@ -217,114 +238,80 @@ public class Zhengfang {
 
     /**
      * 查询成绩
+     *
      * @param name 姓名
-     * @param xh 学号
+     * @param xh   学号
      * @return Result对象
      */
-    public Result grade(String name, String xh,JSONObject jsonObject,String token) {
-        Result result = new Result();
+    public Result grade(String name, String xh, QueryParams queryParams, String token) {
         //返回结果
         JSONObject json = new JSONObject();
         //获得查询结果
-        HttpRequest request = postGrade(name, xh, jsonObject,token);
+        HttpRequest request = postGrade(name, xh, queryParams, token);
         HttpResponse response = request.execute();
         //解析结果
-        if(jsonObject.getStr("btn").equals("Button1")){
+        if (BtnType.Button1 == queryParams.getBtn()) {
             JSONObject grade = gradeStatistics(response.body());
-            json.put("gradeStatistics",grade);
-        }else {
+            json.put("gradeStatistics", grade);
+        } else {
             JSONArray jsonArray = getTableValue(response.body());
             json.put("grade", jsonArray);
         }
-
-        result.setResult("success");
-        result.setMsg("请求成功");
-        result.setItem(json);
-        return result;
+        return Result.builder()
+                .result(ResultStatus.success)
+                .msg("请求成功")
+                .item(json)
+                .build();
     }
 
     /**
      * 成绩统计查询
+     *
      * @param response 成绩统计html页面
      * @return json
      */
     private JSONObject gradeStatistics(String response) {
         JSONObject jsonObject = new JSONObject();
         Document html = Jsoup.parse(response);
-        Element table1 = html.selectFirst("#Datagrid2");
-        JSONArray data2 = getItems(table1);
-        Element table2 = html.selectFirst("#DataGrid6");
-        JSONArray data6 = getItems(table2);
-        Element table3 = html.selectFirst("#DataGrid7");
-        JSONArray data7 = getItems(table3);
-        String totalPeople = html.selectFirst("#zyzrs").text();
-        String averageScorePoint = html.selectFirst("#pjxfjd").text();
-        String sumOfGradePoints = html.selectFirst("#xfjdzh").text();
-        String creditStatistics = html.selectFirst("#xftj").text();
-        jsonObject.put("data2",data2);
-        jsonObject.put("data6",data6);
-        jsonObject.put("data7",data7);
-        jsonObject.put("totalPeople",totalPeople);
-        jsonObject.put("averageScorePoint",averageScorePoint);
-        jsonObject.put("sumOfGradePoints",sumOfGradePoints);
-        jsonObject.put("creditStatistics",creditStatistics);
+        jsonObject.put("data2", getItems(html.selectFirst("#Datagrid2")));
+        jsonObject.put("data6", getItems(html.selectFirst("#DataGrid6")));
+        jsonObject.put("data7", getItems(html.selectFirst("#DataGrid7")));
+        jsonObject.put("totalPeople", html.selectFirst("#zyzrs").text());
+        jsonObject.put("averageScorePoint", html.selectFirst("#pjxfjd").text());
+        jsonObject.put("sumOfGradePoints", html.selectFirst("#xfjdzh").text());
+        jsonObject.put("creditStatistics", html.selectFirst("#xftj").text());
         return jsonObject;
     }
 
     /**
      * 获取成绩查询结果
-     * @param name 名字
-     * @param xh 学号
-     * @param jsonObject 客户端传来数据
+     *
+     * @param name        名字
+     * @param xh          学号
+     * @param queryParams 客户端传来数据
      * @return HttpRequest
      */
-    private HttpRequest postGrade(String name, String xh,JSONObject jsonObject,String token){
+    private HttpRequest postGrade(String name, String xh, QueryParams queryParams, String token) {
         String host = "http://220.167.53.63:95/(" + token + ")";
-        HttpResponse response = gradePage(xh, name,token);
+        HttpResponse response = gradePage(xh, name, token);
         Document html = Jsoup.parse(response.body());
         //表单数据
         String EVENTTARGET = html.selectFirst("input[name=__EVENTTARGET]").attr("value");
         String EVENTARGUMENT = html.selectFirst("input[name=__EVENTARGUMENT]").attr("value");
         String VIEWSTATE = html.selectFirst("input[name=__VIEWSTATE]").attr("value");
-        String ddlXN = jsonObject.getStr("year");
-        String ddlXQ = jsonObject.getStr("semester");
-        String ddl_kcxz = jsonObject.getStr("course_nature");
-        String btn = jsonObject.getStr("btn");
-        String btnValue = getBtnValues(btn);
-        Map<String,Object> parmes = new HashMap<>(7);
+
+        String btnValue = URLUtil.encode(queryParams.getBtn().getDescription());
+        Map<String, Object> parmes = new HashMap<>(7);
         parmes.put("__EVENTTARGET", EVENTTARGET);
         parmes.put("__EVENTARGUMENT", EVENTARGUMENT);
         parmes.put("__VIEWSTATE", VIEWSTATE);
-        parmes.put("ddlXN", ddlXN);
-        parmes.put("ddlXQ", ddlXQ);
-        parmes.put("ddl_kcxz", ddl_kcxz);
-        parmes.put(btn, btnValue);
-        return HttpRequest.post(host + "/xscjcx.aspx?xh=" + xh + "&xm=" + URLUtil.encode(name)+"&gnmkdm=N121605")
+        parmes.put("ddlXN", queryParams.getYear());
+        parmes.put("ddlXQ", queryParams.getSemester());
+        parmes.put("ddl_kcxz", queryParams.getCourseNature());
+        parmes.put(queryParams.getBtn().toString(), btnValue);
+        return HttpRequest.post(host + "/xscjcx.aspx?xh=" + xh + "&xm=" + URLUtil.encode(name) + "&gnmkdm=N121605")
                 .header(Header.REFERER, host + "xs_main.aspx?xh=" + xh)
-                .header(Header.USER_AGENT, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:67.0) Gecko/20100101 Firefox/67.0")
+                .header(Header.USER_AGENT, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:67.0) Gecko/20100101 Firefox/67.0; PaleBlueYk's reptiles")
                 .form(parmes);
-    }
-    /**
-     * 获取查询成绩按钮值URL化
-     * @param btn 按钮
-     * @return 值
-     */
-    private String getBtnValues(String btn){
-        switch (btn){
-            case "btn_xq":
-                return URLUtil.encode("学期成绩");
-            case "btn_xn":
-                return URLUtil.encode("学年成绩");
-            case "btn_zcj":
-                return URLUtil.encode("历年成绩");
-            case "btn_zg":
-                return URLUtil.encode("课程最高成绩");
-            case "Button2":
-                return URLUtil.encode("未通过成绩");
-            case "Button1":
-                return URLUtil.encode("成绩统计");
-            default:
-                throw new IllegalStateException("Unexpected value: " + btn);
-        }
     }
 }

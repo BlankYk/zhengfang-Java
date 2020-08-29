@@ -5,12 +5,9 @@ RUN apk add --no-cache maven
 
 VOLUME /app
 
-ADD ./ /app
+ADD ./build /app
 WORKDIR /app
-RUN mvn package
-RUN ls ./
-ADD ./target /app
 RUN ls /app
-CMD java -jar /app/flea-0.0.2.jar
+CMD java -jar /app/flea-1.0.0.jar
 
 EXPOSE 5000

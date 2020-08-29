@@ -15,8 +15,9 @@ Coded By
 Sichuan Aerospace Vocational and Technical College
 Department of Computer Science
 G17计应3 YangKai
-Blog:https://css0209.cn
-Github:https://github.com/blankyk
+Blog: https://css0209.cn
+Github: https://github.com/blankyk
+EMail: blanyk@css2009.cn
 
 have enjoyed
 -----版本号-----${spring-boot.version}
