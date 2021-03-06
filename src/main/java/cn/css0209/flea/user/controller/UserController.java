@@ -6,6 +6,7 @@ import cn.css0209.flea.user.model.QueryParams;
 import cn.css0209.flea.user.model.Result;
 import cn.css0209.flea.user.types.BtnType;
 import cn.css0209.flea.user.types.ResultStatus;
+import com.google.common.base.Strings;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -16,6 +17,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
+import java.time.LocalDate;
+import java.util.Objects;
 
 /**
  * @author blankyk
@@ -26,6 +29,7 @@ import javax.validation.Valid;
 public class UserController {
     @Autowired
     private Zhengfang zf;
+    public String undefined = "undefined";
 
     /**
      * 获取token
@@ -118,6 +122,18 @@ public class UserController {
     public Mono<Result> selectGrade(WebSession session, ServerHttpRequest request, String year, String semester, String courseNature, BtnType btn) {
         String name = session.getAttribute("name");
         String xh = session.getAttribute("xh");
+        if (Objects.equals(year, undefined) || Strings.isNullOrEmpty(year)) {
+            LocalDate now = LocalDate.now();
+            int yearNow = now.getYear();
+            String yearLast = String.valueOf(yearNow - 1);
+            year = yearLast + "-" + yearNow;
+        }
+        if (Objects.equals(semester, undefined) || Strings.isNullOrEmpty(semester)) {
+            semester = "1";
+        }
+        if (Objects.equals(courseNature, undefined) || Strings.isNullOrEmpty(courseNature)) {
+            courseNature = "";
+        }
         return Mono.just(zf.grade(name, xh, QueryParams.builder()
                         .year(year)
                         .semester(semester)

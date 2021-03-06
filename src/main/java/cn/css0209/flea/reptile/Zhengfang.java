@@ -22,12 +22,10 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
+import sun.tools.tree.NullExpression;
 
 import java.io.FileInputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author blankyk
@@ -248,7 +246,16 @@ public class Zhengfang {
         JSONObject json = new JSONObject();
         //获得查询结果
         HttpRequest request = postGrade(name, xh, queryParams, token);
-        HttpResponse response = request.execute();
+        HttpResponse response;
+        try {
+            response = request.execute();
+        } catch (Exception e) {
+            return Result.builder()
+                    .result(ResultStatus.fail)
+                    .msg("请重新登录")
+                    .item(json)
+                    .build();
+        }
         //解析结果
         if (BtnType.Button1 == queryParams.getBtn()) {
             JSONObject grade = gradeStatistics(response.body());
@@ -273,13 +280,19 @@ public class Zhengfang {
     private JSONObject gradeStatistics(String response) {
         JSONObject jsonObject = new JSONObject();
         Document html = Jsoup.parse(response);
-        jsonObject.put("data2", getItems(html.selectFirst("#Datagrid2")));
-        jsonObject.put("data6", getItems(html.selectFirst("#DataGrid6")));
-        jsonObject.put("data7", getItems(html.selectFirst("#DataGrid7")));
-        jsonObject.put("totalPeople", html.selectFirst("#zyzrs").text());
-        jsonObject.put("averageScorePoint", html.selectFirst("#pjxfjd").text());
-        jsonObject.put("sumOfGradePoints", html.selectFirst("#xfjdzh").text());
-        jsonObject.put("creditStatistics", html.selectFirst("#xftj").text());
+        try {
+            jsonObject.put("data2", getItems(html.selectFirst("#Datagrid2")));
+            jsonObject.put("data6", getItems(html.selectFirst("#DataGrid6")));
+            jsonObject.put("data7", getItems(html.selectFirst("#DataGrid7")));
+            jsonObject.put("totalPeople", html.selectFirst("#zyzrs").text());
+            jsonObject.put("averageScorePoint", html.selectFirst("#pjxfjd").text());
+            jsonObject.put("sumOfGradePoints", html.selectFirst("#xfjdzh").text());
+            jsonObject.put("creditStatistics", html.selectFirst("#xftj").text());
+        } catch (Exception e) {
+            log.warn(e.getMessage());
+            return jsonObject;
+        }
+
         return jsonObject;
     }
 
@@ -296,9 +309,18 @@ public class Zhengfang {
         HttpResponse response = gradePage(xh, name, token);
         Document html = Jsoup.parse(response.body());
         //表单数据
-        String EVENTTARGET = html.selectFirst("input[name=__EVENTTARGET]").attr("value");
-        String EVENTARGUMENT = html.selectFirst("input[name=__EVENTARGUMENT]").attr("value");
-        String VIEWSTATE = html.selectFirst("input[name=__VIEWSTATE]").attr("value");
+        String EVENTTARGET;
+        String EVENTARGUMENT;
+        String VIEWSTATE;
+        try {
+            EVENTTARGET = html.selectFirst("input[name=__EVENTTARGET]").attr("value");
+            EVENTARGUMENT = html.selectFirst("input[name=__EVENTARGUMENT]").attr("value");
+            VIEWSTATE = html.selectFirst("input[name=__VIEWSTATE]").attr("value");
+        } catch (Exception e) {
+            log.warn(e.getMessage());
+            return null;
+        }
+
 
         String btnValue = URLUtil.encode(queryParams.getBtn().getDescription());
         Map<String, Object> parmes = new HashMap<>(7);
