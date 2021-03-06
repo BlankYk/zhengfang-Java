@@ -102,6 +102,7 @@ public class Zhengfang {
         List<String> captchas = ReUtil.findAll("language=\'javascript\'", response.body(), 0, new ArrayList<>());
         List<String> error = ReUtil.findAll("ERROR", response.body(), 0, new ArrayList<>());
         List<String> outSchool = ReUtil.findAll("用户名不存在或未按照要求参加教学活动", response.body(), 0, new ArrayList<>());
+        List<String> pwdNeedChange = ReUtil.findAll("您的密码为弱密码，存在安全风险，需修改后才能登陆", response.body(), 0, new ArrayList<>());
         if (names.size() > 0) {
             return Result.builder()
                     .result(ResultStatus.success)
@@ -121,9 +122,15 @@ public class Zhengfang {
         } else if (outSchool.size() > 0) {
             return Result.builder()
                     .result(ResultStatus.fail)
-                    .msg("你已经是大人了!")
+                    .msg("你已经是大人了!(该账户无法再登录教务系统)")
+                    .build();
+        } else if (pwdNeedChange.size() > 0) {
+            return Result.builder()
+                    .result(ResultStatus.fail)
+                    .msg("教务系统需要您修改密码，请通过http://zf.css0209.cn或http://220.167.53.63:95修改密码")
                     .build();
         }
+        log.info(response.body());
         return Result.builder().build();
     }
 
