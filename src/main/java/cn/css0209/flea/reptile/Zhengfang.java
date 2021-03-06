@@ -289,7 +289,7 @@ public class Zhengfang {
         Document html = Jsoup.parse(response);
         try {
             jsonObject.put("data2", getItems(html.selectFirst("#Datagrid2")));
-            jsonObject.put("data6", getItems(html.selectFirst("#DataGrid6")));
+//            jsonObject.put("data6", getItems(html.selectFirst("#DataGrid6")));
             jsonObject.put("data7", getItems(html.selectFirst("#DataGrid7")));
             jsonObject.put("totalPeople", html.selectFirst("#zyzrs").text());
             jsonObject.put("averageScorePoint", html.selectFirst("#pjxfjd").text());
