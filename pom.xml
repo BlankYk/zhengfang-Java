@@ -10,7 +10,7 @@
     </parent>
     <groupId>cn.css0209.flea</groupId>
     <artifactId>flea</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <name>flea</name>
     <description>四川航天职业技术学院成绩查询平台</description>
 
